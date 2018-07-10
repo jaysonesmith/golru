@@ -7,24 +7,56 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAddToCache(t *testing.T) {
+func TestAddItems(t *testing.T) {
 	testCases := []struct {
-		name, key, value string
-		expected         interface{}
+		name        string
+		items       golru.Collection
+		key         string
+		expected    interface{}
+		expectedLen int
 	}{
-		{name: "Empty", key: "", value: "", expected: nil},
-		{name: "A", key: "foo", value: "bar", expected: ""},
+		{
+			name:        "Empty",
+			items:       golru.Collection{},
+			key:         "",
+			expected:    nil,
+			expectedLen: 0,
+		},
+		{
+			name: "Single item",
+			items: golru.Collection{
+				Items: []golru.Item{
+					golru.Item{
+						ID:    "foo",
+						Type:  "foo_type",
+						Dur:   "30",
+						Group: "foo_group",
+						URL:   "https://foo.com/",
+					},
+				},
+			},
+			key: "foo",
+			expected: golru.Item{
+				ID:    "foo",
+				Type:  "foo_type",
+				Dur:   "30",
+				Group: "foo_group",
+				URL:   "https://foo.com/",
+			},
+			expectedLen: 1,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			cache := golru.New()
+			cache := golru.New(100)
 
-			err := cache.Add(tc.key, tc.value)
+			err := cache.AddItems(tc.items)
 			actual, _ := cache.Store.Peek(tc.key)
 
 			assert.Nil(t, err)
-			assert.Equal(t, tc.value, actual)
+			assert.Equal(t, tc.expectedLen, cache.Store.Len())
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }

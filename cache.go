@@ -1,8 +1,6 @@
 package golru
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/golang-lru"
 )
 
@@ -11,18 +9,30 @@ type Cache struct {
 	Store *lru.Cache
 }
 
-// New ...
-func New() *Cache {
-	cache, err := lru.New(100)
-	if err != nil {
-		fmt.Println(err)
-	}
+// Collection is a collection of individual items
+type Collection struct {
+	Items []Item
+}
 
+// Item is a data describing an item
+type Item struct {
+	ID    string
+	Type  string
+	Dur   string
+	Group string
+	URL   string
+}
+
+// New sets up a cache
+func New(size int) *Cache {
+	cache, _ := lru.New(size)
 	return &Cache{Store: cache}
 }
 
-// Add adds things to the cache
-func (c *Cache) Add(key, value string) error {
-	c.Store.Add(key, value)
+// AddItems adds a group of items to the cache
+func (c *Cache) AddItems(collection Collection) error {
+	for _, item := range collection.Items {
+		c.Store.Add(item.ID, item)
+	}
 	return nil
 }
